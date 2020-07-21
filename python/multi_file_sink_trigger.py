@@ -36,6 +36,8 @@ class multi_file_sink_trigger(gr.sync_block):
         self.threshold = threshold
         self.trigger = trigger
         self.unpass_counter = 0
+        self.last_drop_items0 = numpy.array( [], dtype = numpy.complex64 )
+        self.last_drop_items1 = numpy.array( [], dtype = numpy.complex64 )
 
     def if_input_items_pass( self, input_items1, input_items2 ):
         if input_items1.max() > self.trigger or input_items2.max() > self.trigger:
@@ -50,9 +52,17 @@ class multi_file_sink_trigger(gr.sync_block):
         in0 = input_items[0]
         in1 = input_items[1]
         if self.if_input_items_pass( in0, in1 ):
-            data0 = in0.tostring()
-            self.fd0.write( data0 )
-            data1 = in1.tostring()
-            self.fd1.write( data1 )
+            data0 = numpy.concatenate( ( self.last_drop_items0, in0 ) )
+            data1 = numpy.concatenate( ( self.last_drop_items1, in1 ) )
+            s_data0 = data0.tostring()
+            self.fd0.write( s_data0 )
+            s_data1 = data1.tostring()
+            self.fd1.write( s_data1 )
+            self.last_drop_items0 = numpy.array( [], dtype = numpy.complex64 )
+            self.last_drop_items1 = numpy.array( [], dtype = numpy.complex64 )
+        else:
+            self.last_drop_items0 = in0.copy()
+            self.last_drop_items1 = in1.copy()
+        
         return len(input_items[0])
 
