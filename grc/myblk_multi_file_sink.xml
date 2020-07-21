@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<block>
+  <name>Multi File Sink</name>
+  <key>myblk_multi_file_sink</key>
+  <category>[myblk]</category>
+  <import>import myblk</import>
+  <make>myblk.multi_file_sink($filedir0, $filedir1)</make>
+  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
+       Sub-nodes:
+       * name
+       * key (makes the value accessible as $keyname, e.g. in the make node)
+       * type -->
+  <param>
+    <name>FILEDIR0</name>
+    <key>filedir0</key>
+    <type>file_save</type>
+  </param>
+  <param>
+    <name>FILEDIR1</name>
+    <key>filedir1</key>
+    <type>file_save</type>
+  </param>
+  <!-- Make one 'sink' node per input. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) -->
+  <sink>
+    <name>in</name>
+    <type>complex</type>
+  </sink>
+  <sink>
+    <name>in</name>
+    <type>complex</type>
+  </sink>
+  <!-- Make one 'source' node per output. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) -->
+
+</block>
