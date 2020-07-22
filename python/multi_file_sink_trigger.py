@@ -26,15 +26,18 @@ class multi_file_sink_trigger(gr.sync_block):
     """
     docstring for block multi_file_sink_trigger
     """
-    def __init__(self, filedir0,filedir1,trigger,threshold):
+    def __init__(self, filedir0, filedir1, trigger, threshold, reserved_points ):
         gr.sync_block.__init__(self,
             name="multi_file_sink_trigger",
             in_sig=[ numpy.complex64, numpy.complex64 ],
             out_sig=None)
+        if trigger < 0 or threshold < 0 or reserved_points <= 0:
+            raise Exception("[multi_file_sink_trigger]:illegal input")
         self.fd0 = open( filedir0, "wb" )
         self.fd1 = open( filedir1, "wb" )
         self.threshold = threshold
         self.trigger = trigger
+        self.reserved_points = reserved_points
         self.unpass_counter = 0
         self.last_drop_items0 = numpy.array( [], dtype = numpy.complex64 )
         self.last_drop_items1 = numpy.array( [], dtype = numpy.complex64 )
@@ -61,8 +64,10 @@ class multi_file_sink_trigger(gr.sync_block):
             self.last_drop_items0 = numpy.array( [], dtype = numpy.complex64 )
             self.last_drop_items1 = numpy.array( [], dtype = numpy.complex64 )
         else:
-            self.last_drop_items0 = in0.copy()
-            self.last_drop_items1 = in1.copy()
-        
+            self.last_drop_items0 = numpy.concatenate( ( self.last_drop_items0, in0 ) )
+            self.last_drop_items1 = numpy.concatenate( ( self.last_drop_items1, in1 ) )
+            cut_index = -1 * min( self.reserved_points, self.last_drop_items0.size )
+            self.last_drop_items0 = self.last_drop_items0[ cut_index: ]
+            self.last_drop_items1 = self.last_drop_items1[ cut_index: ]
         return len(input_items[0])
 

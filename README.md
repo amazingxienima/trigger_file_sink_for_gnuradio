@@ -23,7 +23,7 @@ $ sudo make uninstall
 $ sudo ldconfig
 ```
 
-## Version
-
-v 1.0(2020/7/21) first release 
+## Verson
+v 1.0(2020/7/21) first release
+v 1.1(2020/7/21) multi_file_sink_trigger save the last "reserved points"
 
