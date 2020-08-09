@@ -4,7 +4,7 @@
   <key>myblk_single_file_sink_trigger</key>
   <category>[myblk]</category>
   <import>import myblk</import>
-  <make>myblk.single_file_sink_trigger($filedir, $trigger, $threshold)</make>
+  <make>myblk.single_file_sink_trigger($filedir, $trigger, $threshold, $reserved_points)</make>
   <!-- Make one 'param' node for every Parameter you want settable from the GUI.
        Sub-nodes:
        * name
@@ -25,7 +25,11 @@
       <key>threshold</key>
       <type>int</type>
     </param>
-
+    <param>
+      <name>RESERVED POINTS</name>
+      <key>reserved_points</key>
+      <type>int</type>
+    </param>
   <!-- Make one 'sink' node per input. Sub-nodes:
        * name (an identifier for the GUI)
        * type

@@ -26,29 +26,51 @@ class single_file_sink_trigger(gr.sync_block):
     """
     docstring for block single_file_sink_trigger
     """
-    def __init__(self, filedir,trigger,threshold):
+    def __init__(self, filedir,trigger,threshold,reserved_points):
         gr.sync_block.__init__(self,
             name="single_file_sink_trigger",
             in_sig=[ numpy.complex64 ],
             out_sig=None)
+        if trigger < 0 or threshold < 0 or reserved_points <= 0:
+            raise Exception("[single_file_sink_trigger]:illegal input")
         self.fd0 = open( filedir, "wb" )
         self.threshold = threshold
         self.trigger = trigger
+        self.keywords=numpy.array( [10,10,-10,10], dtype = numpy.complex64 )
+        self.reserved_points = reserved_points
         self.unpass_counter = 0
-
-    def if_input_items_pass( self, input_items ):
-        if input_items.max() > self.trigger:
+        self.last_drop_items0 = numpy.array( [], dtype = numpy.complex64 )
+        self.drop_num = numpy.array( [0], dtype = numpy.complex64 )
+    def if_input_items_pass( self, input_items1, data_lenth ):
+        if input_items1.max() > self.trigger:
             self.unpass_counter = 0
-            return True           
+            return True
+        if self.unpass_counter == 0 and data_lenth < 100:
+            print( input_items1.size ) 
+            return True
         self.unpass_counter += 1
-        if self.unpass_counter <= self.threshold:
+        if self.unpass_counter < self.threshold:
             return True
         return False
 
     def work(self, input_items, output_items):
         in0 = input_items[0]
-        if self.if_input_items_pass( in0 ):
-            data0 = in0.tostring()
-            self.fd0.write( data0 )
+        if self.unpass_counter == 0:
+            writd_idx = self.if_input_items_pass( in0[-5:], in0.size )
+        else:
+            writd_idx = self.if_input_items_pass( numpy.concatenate( ( in0[0:-1:500],in0[1:-1:500],in0[2:-1:500],in0[3:-1:500],in0[4:-1:500] )), in0.size )
+        if writd_idx:
+            if self.last_drop_items0.size != 0:
+                in0 = numpy.concatenate(( self.keywords , self.drop_num , self.last_drop_items0, in0))
+                self.last_drop_items0 = numpy.array( [], dtype = numpy.complex64 ) 
+                self.drop_num[0]=0
+            s_data0 = in0.tostring()
+            self.fd0.write( s_data0 )
+        else:
+            self.last_drop_items0 = numpy.concatenate( ( self.last_drop_items0, in0 ) )
+            dr0 = self.last_drop_items0.size
+            cut_index = -1 * min( self.reserved_points, self.last_drop_items0.size )
+            self.last_drop_items0 = self.last_drop_items0[ cut_index: ]
+            dr1 = self.last_drop_items0.size 
+            self.drop_num[0] = self.drop_num[0] + dr0 - dr1 
         return len(input_items[0])
-
